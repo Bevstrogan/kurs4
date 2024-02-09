@@ -5,9 +5,9 @@ from abc import ABC, abstractmethod
 
 
 class ApiManager(ABC):
-
     @abstractmethod
     def get_vacancies(self):
+        'Абстрактный метод для возврата списка'
         pass
 
 
@@ -27,11 +27,13 @@ class HeadHunter(Vacancy, ApiManager):
         self.url = 'https://api.hh.ru'
 
     def get_vacancies(self):
+        'Выгружает данные по заданным критериям и возвращает ввиде словаря'
         data = requests.get(f"{self.url}/vacancies",
                             params={'text': self.name, 'page': self.page, 'per_page': self.top_n}).json()
         return data
 
     def load_vacancy(self):
+        'С помощью цикла берет нужные данные и добавляет из в переменную'
         data = self.get_vacancies()
         vacancies = []
         for vacancy in data.get('items', []):
@@ -53,7 +55,7 @@ class HeadHunter(Vacancy, ApiManager):
         return vacancies
 
 def find_vacancy():
-
+    'Функция сортирует данные введенные пользователем и добавляет их в json файл'
     name = input('Введите вакансию: ')
     top_n = input('Введите кол-во вакансий: ')
     page = int(input('Введите страницу: '))
