@@ -1,82 +1,40 @@
-import requests
-from datetime import datetime
-import json
-from abc import ABC, abstractmethod
+from src.Iteractions import Interaction
+
+def main():
+    user_input = input("Пожалуйста напишите название вакансии которую вы ищите: ")
+
+    while True:
+        users_salary = input("Напишите желаемую зарплату: ")
+        if users_salary.isdigit():
+            break
+        print("\nПожалуйста введите зарплату цифрами или нажмите enter:")
+
+    user = Interaction(user_input)
+
+    while True:
+        users_city = input("Введите ваш город: ").capitalize()
+        if users_city.isalpha():
+            break
+        print("\nРезультатов по данному городу не найдено.\n")
 
 
-class ApiManager(ABC):
-    @abstractmethod
-    def get_vacancies(self):
-        'Абстрактный метод для возврата списка'
-        pass
+
+    user.sorted_salary(user.vacancy_all, int(users_salary), users_city)
+    user.get_top_vacancies(user.sort_salary)
+
+    user.make_info(user.top_salary)
 
 
-class Vacancy:
-    def __init__(self, name, page, top_N):
-        self.name = name
-        self.page = page
-        self.top_n = top_N
+    while True:
+        number_vacancy = input("Введите номер вакансии в зависимости от зарплаты\n")
 
-    def __repr__(self):
-        return f"{self.name}"
+        if number_vacancy.isdigit():
+            break
 
 
-class HeadHunter(Vacancy, ApiManager):
-    def __init__(self, name, page, top_N):
-        super().__init__(name, page, top_N)
-        self.url = 'https://api.hh.ru'
+    user.save_info()
 
-    def get_vacancies(self):
-        'Выгружает данные по заданным критериям и возвращает ввиде словаря'
-        data = requests.get(f"{self.url}/vacancies",
-                            params={'text': self.name, 'page': self.page, 'per_page': self.top_n}).json()
-        return data
+    print(user.last_info(user.vacancies_list, number_vacancy))
 
-    def load_vacancy(self):
-        'С помощью цикла берет нужные данные и добавляет из в переменную'
-        data = self.get_vacancies()
-        vacancies = []
-        for vacancy in data.get('items', []):
-            published_at_str = vacancy['published_at']
-            published_at_date = datetime.strptime(published_at_str,"%Y-%m-%dT%H:%M:%S%z").date()
-            vacancy_info = {
-                "id": vacancy['id'],
-                "name": vacancy['name'],
-                "salary_from": vacancy['salary']['from']
-                if vacancy.get('salary') else None,
-                "salary_to": vacancy['salary']['to']
-                if vacancy.get('salary') else None,
-                "responsibility": vacancy['snippet']
-                ['responsibility'],
-                "date": published_at_date.strftime("%d.%m.%Y")
-            }
-            vacancies.append(vacancy_info)
-
-        return vacancies
-
-def find_vacancy():
-    'Функция сортирует данные введенные пользователем и добавляет их в json файл'
-    name = input('Введите вакансию: ')
-    top_n = input('Введите кол-во вакансий: ')
-    page = int(input('Введите страницу: '))
-    results = HeadHunter(name, page, top_n)
-    vacancies_dict = {'HeadHunter': results.load_vacancy()}
-
-    with open('Found_Vacancies.json', 'w', encoding='utf-8') as file:
-        json.dump(vacancies_dict, file, ensure_ascii=False, indent=2)
-
-        results.page = page
-        hh_data = results.load_vacancy()
-
-        vacancies_dict['HH'] = hh_data
-
-        for hh in vacancies_dict['HH']:
-            print(
-                f"\nid - {hh['id']}\n"
-                f"Должность - {hh['name']}\n"
-                f"З.п от - {hh['salary_from']}\n"
-                f"З.п до - {hh['salary_to']}\n"
-                f"Описание - {hh['responsibility']}\n"
-                f"Дата - {hh['date']}\n")
-
-find_vacancy()
+if __name__ == '__main__':
+    main()
